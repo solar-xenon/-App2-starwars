@@ -1,40 +1,39 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, FlatList, Text } from "react-native";
+import SearchBar from "../components/SearchBar";
+import SearchModal from "../components/SearchModal";
 
 export default function FilmsScreen() {
-  const [data, setData] = useState([]);
+  const [films, setFilms] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
-    fetch("https://www.swapi.tech/api/films")
-      .then((resp) => resp.json())
-      .then(({ result }) => {
-        const mapped = result.map((film, index) => ({
-          key: index.toString(),
-          value: film.properties.title,
-        }));
-        setData(mapped);
-      })
-      .catch((err) => console.log(err));
+    fetch("https://swapi.dev/api/films/")
+      .then((res) => res.json())
+      .then((data) => setFilms(data.results));
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1 }}>
+      <SearchBar
+        onSubmit={(text) => {
+          setSearchText(text);
+          setModalVisible(true);
+        }}
+      />
+
+      <SearchModal
+        visible={modalVisible}
+        text={searchText}
+        onClose={() => setModalVisible(false)}
+      />
+
       <FlatList
-        data={data}
-        renderItem={({ item }) => (
-          <Text style={styles.item}>{item.value}</Text>
-        )}
+        data={films}
+        keyExtractor={(item) => item.title}
+        renderItem={({ item }) => <Text style={{ padding: 10 }}>{item.title}</Text>}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 40 },
-  item: {
-    margin: 5,
-    padding: 10,
-    backgroundColor: "ghostwhite",
-    textAlign: "center",
-  },
-});

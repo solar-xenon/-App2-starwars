@@ -1,40 +1,39 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, FlatList, Text } from "react-native";
+import SearchBar from "../components/SearchBar";
+import SearchModal from "../components/SearchModal";
 
 export default function PlanetsScreen() {
-  const [data, setData] = useState([]);
+  const [planets, setPlanets] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
-    fetch("https://www.swapi.tech/api/planets")
-      .then((resp) => resp.json())
-      .then(({ results }) => {
-        const mapped = results.map((item, index) => ({
-          key: index.toString(),
-          value: item.name,
-        }));
-        setData(mapped);
-      })
-      .catch((err) => console.log(err));
+    fetch("https://swapi.dev/api/planets/")
+      .then((res) => res.json())
+      .then((data) => setPlanets(data.results));
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1 }}>
+      <SearchBar
+        onSubmit={(text) => {
+          setSearchText(text);
+          setModalVisible(true);
+        }}
+      />
+
+      <SearchModal
+        visible={modalVisible}
+        text={searchText}
+        onClose={() => setModalVisible(false)}
+      />
+
       <FlatList
-        data={data}
-        renderItem={({ item }) => (
-          <Text style={styles.item}>{item.value}</Text>
-        )}
+        data={planets}
+        keyExtractor={(item) => item.name}
+        renderItem={({ item }) => <Text style={{ padding: 10 }}>{item.name}</Text>}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 40 },
-  item: {
-    margin: 5,
-    padding: 10,
-    backgroundColor: "ghostwhite",
-    textAlign: "center",
-  },
-});
