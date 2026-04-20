@@ -1,39 +1,52 @@
-import React, { useState, useEffect } from "react";
-import { View, FlatList, Text } from "react-native";
-import SearchBar from "../components/SearchBar";
-import SearchModal from "../components/SearchModal";
+import React, { useEffect, useState } from "react";
+import { ScrollView } from "react-native";
+import Animated, { SlideInLeft } from "react-native-reanimated";
+import SwipeableItem from "../components/SwipeableItem";
+import LazyImage from "../components/LazyImage";
+import ModalDialog from "../components/ModalDialog";
 
 export default function PlanetsScreen() {
   const [planets, setPlanets] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [searchText, setSearchText] = useState("");
+  const [selectedName, setSelectedName] = useState("");
 
+  // HARD‑CODED DATA (fixes blank screen)
   useEffect(() => {
-    fetch("https://swapi.dev/api/planets/")
-      .then((res) => res.json())
-      .then((data) => setPlanets(data.results));
+    setPlanets([
+      { name: "Tatooine" },
+      { name: "Alderaan" },
+      { name: "Hoth" },
+      { name: "Dagobah" },
+    ]);
   }, []);
 
+  function handleSwipe(name) {
+    setSelectedName(name);
+    setModalVisible(true);
+  }
+
   return (
-    <View style={{ flex: 1 }}>
-      <SearchBar
-        onSubmit={(text) => {
-          setSearchText(text);
-          setModalVisible(true);
+    <ScrollView style={{ padding: 20 }}>
+      <LazyImage
+        style={{ width: "100%", height: 180, marginBottom: 20 }}
+        resizeMode="cover"
+        source={{
+          uri: "https://picsum.photos/600/300"
+,
         }}
       />
 
-      <SearchModal
+      {planets.map((p, index) => (
+        <Animated.View key={index} entering={SlideInLeft}>
+          <SwipeableItem name={p.name} onSwipe={() => handleSwipe(p.name)} />
+        </Animated.View>
+      ))}
+
+      <ModalDialog
         visible={modalVisible}
-        text={searchText}
+        text={selectedName}
         onClose={() => setModalVisible(false)}
       />
-
-      <FlatList
-        data={planets}
-        keyExtractor={(item) => item.name}
-        renderItem={({ item }) => <Text style={{ padding: 10 }}>{item.name}</Text>}
-      />
-    </View>
+    </ScrollView>
   );
 }
