@@ -1,52 +1,63 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView } from "react-native";
-import Animated, { SlideInLeft } from "react-native-reanimated";
+import { ScrollView, TextInput } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import SwipeableItem from "../components/SwipeableItem";
 import LazyImage from "../components/LazyImage";
-import ModalDialog from "../components/ModalDialog";
 
-export default function PlanetsScreen() {
+export default function PlanetsScreen({ navigation }) {
   const [planets, setPlanets] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedName, setSelectedName] = useState("");
+  const [search, setSearch] = useState("");
 
-  // HARD‑CODED DATA (fixes blank screen)
   useEffect(() => {
-    setPlanets([
-      { name: "Tatooine" },
-      { name: "Alderaan" },
-      { name: "Hoth" },
-      { name: "Dagobah" },
-    ]);
+    fetch("https://swapi.py4e.com/api/planets/")
+      .then((res) => res.json())
+      .then((data) => setPlanets(data.results))
+      .catch((err) => console.log("API error:", err));
   }, []);
 
-  function handleSwipe(name) {
-    setSelectedName(name);
-    setModalVisible(true);
+  const filtered = planets.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  function handleSwipe(planet) {
+    navigation.navigate("PlanetDetail", { url: planet.url });
   }
 
   return (
-    <ScrollView style={{ padding: 20 }}>
-      <LazyImage
-        style={{ width: "100%", height: 180, marginBottom: 20 }}
-        resizeMode="cover"
-        source={{
-          uri: "https://picsum.photos/600/300"
-,
-        }}
-      />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ScrollView
+        style={{ padding: 20 }}
+        horizontal={false}
+        nestedScrollEnabled={true}
+      >
+        <TextInput
+          placeholder="Search planets..."
+          value={search}
+          onChangeText={setSearch}
+          style={{
+            padding: 10,
+            borderWidth: 1,
+            borderRadius: 8,
+            marginBottom: 20
+          }}
+        />
 
-      {planets.map((p, index) => (
-        <Animated.View key={index} entering={SlideInLeft}>
-          <SwipeableItem name={p.name} onSwipe={() => handleSwipe(p.name)} />
-        </Animated.View>
-      ))}
+        <LazyImage
+          style={{ width: "100%", height: 180, marginBottom: 20 }}
+          resizeMode="cover"
+          source={{ uri: "https://picsum.photos/600/300" }}
+        />
 
-      <ModalDialog
-        visible={modalVisible}
-        text={selectedName}
-        onClose={() => setModalVisible(false)}
-      />
-    </ScrollView>
+        {filtered.map((p, index) => (
+          <SwipeableItem
+            key={index}
+            name={p.name}
+            onSwipe={() => handleSwipe(p)}
+          />
+        ))}
+      </ScrollView>
+    </GestureHandlerRootView>
   );
 }
+
+

@@ -1,45 +1,51 @@
-import React from "react";
-import { View, ScrollView, Text, TouchableOpacity } from "react-native";
+import React, { useRef } from "react";
+import { Text, View, StyleSheet } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 
 export default function SwipeableItem({ name, onSwipe }) {
-  function onScroll(e) {
-    if (e.nativeEvent.contentOffset.x >= 200) {
+  const swipeRef = useRef(null);
+
+  const handleSwipe = () => {
+    if (onSwipe) {
       onSwipe();
     }
-  }
-
-  const scrollProps = {
-    horizontal: true,
-    pagingEnabled: true,
-    showsHorizontalScrollIndicator: false,
-    scrollEventThrottle: 10,
-    onScroll,
+    swipeRef.current?.close();
   };
 
-  return (
-    <View style={{ width: 200, height: 40, marginVertical: 8 }}>
-      <ScrollView {...scrollProps}>
-        <TouchableOpacity>
-          <View
-            style={{
-              width: 200,
-              height: 40,
-              backgroundColor: "azure",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderRadius: 4,
-              borderColor: "slategrey",
-            }}
-          >
-            <Text style={{ textAlign: "center", color: "slategrey" }}>
-              {name}
-            </Text>
-          </View>
-        </TouchableOpacity>
+  const renderLeftActions = () => (
+    <View style={styles.hiddenArea} />
+  );
 
-        {/* Blank page for swipe */}
-        <View style={{ width: 200, height: 40 }} />
-      </ScrollView>
-    </View>
+  return (
+    <Swipeable
+      ref={swipeRef}
+      renderLeftActions={renderLeftActions}
+      renderRightActions={() => null}
+      onSwipeableLeftOpen={handleSwipe}
+      onSwipeableRightOpen={() => {}}
+      leftThreshold={30}
+    >
+      <View style={styles.item}>
+        <Text style={styles.text}>{name}</Text>
+      </View>
+    </Swipeable>
   );
 }
+
+const styles = StyleSheet.create({
+  item: {
+    padding: 15,
+    backgroundColor: "#eee",
+    borderRadius: 8,
+    marginBottom: 10
+  },
+  text: {
+    fontSize: 18
+  },
+  hiddenArea: {
+    width: 200,
+    backgroundColor: "#ccc",
+    borderRadius: 8,
+    marginBottom: 10
+  }
+});
